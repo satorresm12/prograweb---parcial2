@@ -1,35 +1,22 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  NotFoundException,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Task, TaskDocument } from './schemas/task.schema';
-import { User, UserDocument } from '../users/schemas/user.schema';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
+import { UsersService } from '../users/users.service';
 
 @Controller('tasks')
 export class TasksController {
   constructor(
     @InjectModel(Task.name) private readonly taskModel: Model<TaskDocument>,
-    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    private readonly usersService: UsersService,
     private readonly tasksService: TasksService,
   ) {}
 
   @Post()
   async create(@Body() createTaskDto: CreateTaskDto) {
-    const user = await this.userModel.findById(createTaskDto.userId);
-    if (!user) {
-      throw new NotFoundException(
-        `Usuario con ID ${createTaskDto.userId} no encontrado`,
-      );
-    }
-
+    await this.usersService.findById(createTaskDto.userId);
     return this.taskModel.create(createTaskDto);
   }
 
